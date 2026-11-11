@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initTab3Scaling();
   initTab4DeutschJozsa();
   initTab5Entanglement();
+  initTab6Qiskit();
 });
 
 /* =========================================================================
@@ -36,6 +37,10 @@ function initTabs() {
       }
       if (targetId === 'tab-bit-qubit' && window.renderBlochSphere) {
         window.renderBlochSphere();
+      }
+      if (targetId === 'tab-qiskit') {
+        if (window.renderQpuChip) window.renderQpuChip();
+        if (window.renderQiskitHist) window.renderQiskitHist();
       }
     });
   });
@@ -1128,4 +1133,475 @@ function initTab5Entanglement() {
 
   renderClassicalPair();
   renderQuantumPair();
+}
+
+/* =========================================================================
+   MÓDULO 6: QISKIT & EXECUÇÃO EM HARDWARE REAL (IBM QUANTUM RUNTIME)
+   ========================================================================= */
+function initTab6Qiskit() {
+  const backendSelect = document.getElementById('qiskit-target-backend');
+  const shotsSelect = document.getElementById('qiskit-shots');
+  const noiseSelect = document.getElementById('qiskit-noise-level');
+  const runBtn = document.getElementById('btn-run-qiskit-job');
+  const resetBtn = document.getElementById('btn-reset-qiskit');
+  const copyBtn = document.getElementById('btn-copy-qiskit-code');
+
+  const liveStatus = document.getElementById('qiskit-live-status');
+  const logOutput = document.getElementById('qiskit-log-output');
+
+  // Circuit Renders
+  const abstractSvgContainer = document.getElementById('abstract-circuit-svg');
+  const isaSvgContainer = document.getElementById('isa-circuit-svg');
+
+  // Subtabs
+  const qTabBtns = document.querySelectorAll('.q-tab-btn');
+  const qSubContents = document.querySelectorAll('.qiskit-subtab-content');
+
+  // Hardware Specs
+  const chipBackendName = document.getElementById('chip-backend-name');
+  const chipCnotError = document.getElementById('chip-cnot-error');
+  const chipCanvas = document.getElementById('qpu-chip-canvas');
+  const chipCtx = chipCanvas ? chipCanvas.getContext('2d') : null;
+
+  // Histogram
+  const histCanvas = document.getElementById('qiskit-hist-canvas');
+  const histCtx = histCanvas ? histCanvas.getContext('2d') : null;
+  const histFidelity = document.getElementById('hist-fidelity');
+  const histBellCount = document.getElementById('hist-bell-count');
+  const histNoiseCount = document.getElementById('hist-noise-count');
+  const histExplain = document.getElementById('qiskit-hist-explain');
+
+  // Estado do Job
+  let isRunningJob = false;
+  let jobCounts = { '00': 498, '11': 494, '01': 18, '10': 14 }; // Inicial
+  let totalShots = 1024;
+  let selectedBackend = 'ibm_kyoto';
+
+  // Sub-abas (Circuito / Topologia / Histograma)
+  qTabBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const subtabId = btn.dataset.subtab;
+      qTabBtns.forEach((b) => b.classList.remove('active'));
+      qSubContents.forEach((sc) => sc.classList.remove('active'));
+
+      btn.classList.add('active');
+      const target = document.getElementById(subtabId);
+      if (target) target.classList.add('active');
+
+      if (subtabId === 'subtab-hardware') renderQpuChip();
+      if (subtabId === 'subtab-histogram') renderQiskitHist();
+    });
+  });
+
+  // 1. Renderiza Diagramas SVG dos Circuitos (Abstrato vs Transpilado ISA)
+  function renderCircuits() {
+    // Circuito Abstrato: q0 --[H]--*--[M]--
+    //                   q1 -------X--[M]--
+    abstractSvgContainer.innerHTML = `
+      <svg class="circuit-wire-svg" viewBox="0 0 520 100" xmlns="http://www.w3.org/2000/svg">
+        <style>
+          .w-line { stroke: rgba(148,163,184,0.4); stroke-width: 2; }
+          .w-text { fill: #94a3b8; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+          .gate-rect { fill: #0284c7; stroke: #38bdf8; stroke-width: 1.5; rx: 4; }
+          .meas-rect { fill: #475569; stroke: #94a3b8; stroke-width: 1.5; rx: 4; }
+          .gate-lbl { fill: #ffffff; font-family: 'JetBrains Mono', monospace; font-weight: bold; font-size: 13px; text-anchor: middle; dominant-baseline: central; }
+          .cnot-ctrl { fill: #06b6d4; }
+          .cnot-targ { stroke: #06b6d4; stroke-width: 2; fill: none; }
+        </style>
+        <!-- Fios dos qubits q0 e q1 -->
+        <text x="15" y="34" class="w-text">q[0]</text>
+        <line x1="55" y1="30" x2="500" y2="30" class="w-line" />
+
+        <text x="15" y="74" class="w-text">q[1]</text>
+        <line x1="55" y1="70" x2="500" y2="70" class="w-line" />
+
+        <!-- Porta H no q0 -->
+        <rect x="90" y="14" width="34" height="32" class="gate-rect" />
+        <text x="107" y="30" class="gate-lbl">H</text>
+
+        <!-- Porta CNOT (CX) entre q0 e q1 -->
+        <line x1="170" y1="30" x2="170" y2="70" stroke="#06b6d4" stroke-width="2" />
+        <circle cx="170" cy="30" r="5" class="cnot-ctrl" />
+        <circle cx="170" cy="70" r="9" class="cnot-targ" />
+        <line x1="161" y1="70" x2="179" y2="70" stroke="#06b6d4" stroke-width="2" />
+
+        <!-- Porta Measure no q0 -->
+        <rect x="250" y="14" width="34" height="32" class="meas-rect" />
+        <text x="267" y="30" class="gate-lbl">M</text>
+
+        <!-- Porta Measure no q1 -->
+        <rect x="250" y="54" width="34" height="32" class="meas-rect" />
+        <text x="267" y="70" class="gate-lbl">M</text>
+
+        <!-- Barramento Clássico de medição c2 -->
+        <line x1="284" y1="30" x2="310" y2="30" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="3,3" />
+        <line x1="284" y1="70" x2="310" y2="70" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="3,3" />
+        <text x="325" y="54" fill="#fbbf24" font-family="'JetBrains Mono', monospace" font-size="11px">→ meas[0, 1]</text>
+      </svg>
+    `;
+
+    // Circuito ISA Físico Real (PassManager Nível 1):
+    // Na IBM Eagle, H vira Rz(π/2) + SX + Rz(π/2), e CX vira ECR + Rotações locais
+    isaSvgContainer.innerHTML = `
+      <svg class="circuit-wire-svg" viewBox="0 0 520 100" xmlns="http://www.w3.org/2000/svg">
+        <style>
+          .isa-line { stroke: rgba(148,163,184,0.4); stroke-width: 2; }
+          .isa-text { fill: #38bdf8; font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+          .g-rz { fill: #4f46e5; stroke: #818cf8; stroke-width: 1.2; rx: 3; }
+          .g-sx { fill: #0284c7; stroke: #38bdf8; stroke-width: 1.2; rx: 3; }
+          .g-ecr { fill: #7c3aed; stroke: #c084fc; stroke-width: 1.2; rx: 3; }
+          .g-lbl { fill: #ffffff; font-family: 'JetBrains Mono', monospace; font-weight: bold; font-size: 10px; text-anchor: middle; dominant-baseline: central; }
+        </style>
+        <text x="5" y="34" class="isa-text">Q_14</text>
+        <line x1="45" y1="30" x2="510" y2="30" class="isa-line" />
+
+        <text x="5" y="74" class="isa-text">Q_15</text>
+        <line x1="45" y1="70" x2="510" y2="70" class="isa-line" />
+
+        <!-- Decomposição de H: Rz(pi/2) -> SX -> Rz(pi/2) -->
+        <rect x="52" y="18" width="38" height="24" class="g-rz" />
+        <text x="71" y="30" class="g-lbl">Rz(π/2)</text>
+
+        <rect x="96" y="18" width="28" height="24" class="g-sx" />
+        <text x="110" y="30" class="g-lbl">SX</text>
+
+        <rect x="130" y="18" width="38" height="24" class="g-rz" />
+        <text x="149" y="30" class="g-lbl">Rz(π/2)</text>
+
+        <!-- Porta física nativa de 2 qubits: ECR (Echoed Cross-Resonance) -->
+        <rect x="180" y="20" width="36" height="60" class="g-ecr" />
+        <text x="198" y="50" class="g-lbl">ECR</text>
+
+        <!-- Correções de fase locais pós-ECR -->
+        <rect x="228" y="18" width="34" height="24" class="g-rz" />
+        <text x="245" y="30" class="g-lbl">Rz(π)</text>
+
+        <rect x="228" y="58" width="34" height="24" class="g-sx" />
+        <text x="245" y="70" class="g-lbl">SX</text>
+
+        <!-- Leitura Readout Físico -->
+        <rect x="274" y="18" width="30" height="24" fill="#334155" stroke="#94a3b8" rx="3" />
+        <text x="289" y="30" class="g-lbl">RO</text>
+
+        <rect x="274" y="58" width="30" height="24" fill="#334155" stroke="#94a3b8" rx="3" />
+        <text x="289" y="70" class="g-lbl">RO</text>
+
+        <text x="318" y="50" fill="#94a3b8" font-family="'JetBrains Mono', monospace" font-size="10px">Nativo: [Rz, SX, ECR, Readout]</text>
+      </svg>
+    `;
+  }
+
+  // 2. Renderização da Topologia Heavy-Hex do Chip IBM (Eagle 127)
+  function renderQpuChip() {
+    if (!chipCtx) return;
+    const w = chipCanvas.width;
+    const h = chipCanvas.height;
+    chipCtx.clearRect(0, 0, w, h);
+
+    // Fundo escuro com grid sutil de micro-ondas
+    chipCtx.fillStyle = '#050a16';
+    chipCtx.fillRect(0, 0, w, h);
+
+    // Simula a grade de qubits em padrão hexagonal / Heavy-Hex (típico do IBM Eagle)
+    const cols = 9;
+    const rows = 4;
+    const startX = 35;
+    const startY = 35;
+    const gapX = (w - startX * 2) / (cols - 1);
+    const gapY = (h - startY * 2) / (rows - 1);
+
+    const qNodes = [];
+    let qCount = 0;
+
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const x = startX + c * gapX + ((r % 2) * (gapX * 0.3));
+        const y = startY + r * gapY;
+        qNodes.push({ id: qCount++, x, y, r, c });
+      }
+    }
+
+    // Desenha linhas de ressonância (acopladores)
+    chipCtx.strokeStyle = 'rgba(148, 163, 184, 0.16)';
+    chipCtx.lineWidth = 1.2;
+
+    for (let i = 0; i < qNodes.length; i++) {
+      const n1 = qNodes[i];
+      // Conecta horizontal
+      if (n1.c < cols - 1) {
+        const n2 = qNodes[i + 1];
+        chipCtx.beginPath();
+        chipCtx.moveTo(n1.x, n1.y);
+        chipCtx.lineTo(n2.x, n2.y);
+        chipCtx.stroke();
+      }
+      // Conecta vertical
+      if (n1.r < rows - 1 && (n1.c % 2 === 0)) {
+        const n2 = qNodes[i + cols];
+        if (n2) {
+          chipCtx.beginPath();
+          chipCtx.moveTo(n1.x, n1.y);
+          chipCtx.lineTo(n2.x, n2.y);
+          chipCtx.stroke();
+        }
+      }
+    }
+
+    // Destaca a ligação especial dos qubits escolhidos (#14 e #15)
+    const activeNodeA = qNodes[14];
+    const activeNodeB = qNodes[15];
+
+    if (activeNodeA && activeNodeB) {
+      chipCtx.strokeStyle = '#06b6d4';
+      chipCtx.lineWidth = 4;
+      chipCtx.shadowColor = '#06b6d4';
+      chipCtx.shadowBlur = 12;
+      chipCtx.beginPath();
+      chipCtx.moveTo(activeNodeA.x, activeNodeA.y);
+      chipCtx.lineTo(activeNodeB.x, activeNodeB.y);
+      chipCtx.stroke();
+      chipCtx.shadowBlur = 0;
+    }
+
+    // Desenha os nodos dos qubits
+    qNodes.forEach((node) => {
+      const isQ0 = node.id === 14;
+      const isQ1 = node.id === 15;
+
+      chipCtx.beginPath();
+      if (isQ0 || isQ1) {
+        chipCtx.arc(node.x, node.y, 8, 0, Math.PI * 2);
+        chipCtx.fillStyle = isQ0 ? '#38bdf8' : '#a855f7';
+        chipCtx.fill();
+        chipCtx.strokeStyle = '#ffffff';
+        chipCtx.lineWidth = 2;
+        chipCtx.stroke();
+
+        // Label dos qubits ativos
+        chipCtx.fillStyle = '#ffffff';
+        chipCtx.font = 'bold 9px JetBrains Mono, monospace';
+        chipCtx.textAlign = 'center';
+        chipCtx.fillText(isQ0 ? 'Q0(#14)' : 'Q1(#15)', node.x, node.y - 12);
+      } else {
+        chipCtx.arc(node.x, node.y, 4, 0, Math.PI * 2);
+        chipCtx.fillStyle = 'rgba(148, 163, 184, 0.4)';
+        chipCtx.fill();
+      }
+    });
+
+    // Legenda no canto
+    chipCtx.fillStyle = '#64748b';
+    chipCtx.font = '10px JetBrains Mono, monospace';
+    chipCtx.textAlign = 'right';
+    chipCtx.fillText('Topologia Heavy-Hex (Qubits de Micro-ondas @ 15mK)', w - 12, h - 10);
+  }
+
+  // 3. Renderização do Histograma de Contagens (Counts) com Ruído Físico
+  function renderQiskitHist() {
+    if (!histCtx) return;
+    const w = histCanvas.width;
+    const h = histCanvas.height;
+    histCtx.clearRect(0, 0, w, h);
+
+    const states = ['00', '01', '10', '11'];
+    const padX = 50;
+    const padY = 30;
+    const usableW = w - padX * 2;
+    const barSlot = usableW / states.length;
+    const barW = barSlot * 0.52;
+    const maxVal = totalShots * 0.65;
+
+    // Eixos
+    histCtx.strokeStyle = 'rgba(148, 163, 184, 0.25)';
+    histCtx.lineWidth = 1;
+    histCtx.beginPath();
+    histCtx.moveTo(padX, h - padY);
+    histCtx.lineTo(w - padX, h - padY);
+    histCtx.stroke();
+
+    states.forEach((st, i) => {
+      const count = jobCounts[st] || 0;
+      const pct = (count / totalShots);
+      const barH = (count / maxVal) * (h - padY * 2);
+      const x = padX + i * barSlot + (barSlot - barW) / 2;
+      const y = h - padY - barH;
+
+      // Cor: se for Bell puro (|00⟩ ou |11⟩) -> Ciano/Roxo. Se for ruído (|01⟩ ou |10⟩) -> Vermelho/Laranja
+      const isSignal = st === '00' || st === '11';
+      if (isSignal) {
+        const grad = histCtx.createLinearGradient(x, y, x, h - padY);
+        grad.addColorStop(0, '#06b6d4');
+        grad.addColorStop(1, '#6366f1');
+        histCtx.fillStyle = grad;
+      } else {
+        histCtx.fillStyle = count > 0 ? '#f43f5e' : 'rgba(255,255,255,0.05)';
+      }
+
+      histCtx.beginPath();
+      histCtx.roundRect(x, y, barW, Math.max(3, barH), [4, 4, 0, 0]);
+      histCtx.fill();
+
+      // Contagem e Porcentagem no topo
+      histCtx.fillStyle = isSignal ? '#e0f2fe' : '#fda4af';
+      histCtx.font = 'bold 10px JetBrains Mono, monospace';
+      histCtx.textAlign = 'center';
+      histCtx.fillText(String(count), x + barW / 2, Math.max(16, y - 6));
+
+      const pctStr = (pct * 100).toFixed(1) + '%';
+      histCtx.font = '9px JetBrains Mono, monospace';
+      histCtx.fillStyle = '#94a3b8';
+      histCtx.fillText(pctStr, x + barW / 2, Math.max(28, y + 14));
+
+      // Rótulo do estado no eixo X
+      histCtx.fillStyle = '#f1f5f9';
+      histCtx.font = 'bold 11px JetBrains Mono, monospace';
+      histCtx.fillText(`|${st}⟩`, x + barW / 2, h - padY + 18);
+    });
+
+    // Atualiza cards de métricas
+    const bellSum = (jobCounts['00'] || 0) + (jobCounts['11'] || 0);
+    const noiseSum = (jobCounts['01'] || 0) + (jobCounts['10'] || 0);
+    const fidelityPct = ((bellSum / totalShots) * 100).toFixed(1);
+
+    histFidelity.textContent = `${fidelityPct}%`;
+    histBellCount.textContent = `${bellSum} / ${totalShots}`;
+    histNoiseCount.textContent = `${noiseSum} / ${totalShots} (${((noiseSum / totalShots) * 100).toFixed(1)}%)`;
+  }
+
+  // 4. Simulação Realista do Pipeline de Execução do Job
+  function runQiskitJob() {
+    if (isRunningJob) return;
+    isRunningJob = true;
+    runBtn.disabled = true;
+    runBtn.textContent = '⏳ Executando Job no IBM Quantum...';
+
+    selectedBackend = backendSelect.value;
+    totalShots = Number(shotsSelect.value);
+    const noiseMode = noiseSelect.value;
+
+    chipBackendName.textContent = selectedBackend;
+
+    // Reset visual dos steps do pipeline
+    const s4 = document.getElementById('badge-step-4');
+    const s5 = document.getElementById('badge-step-5');
+    const s6 = document.getElementById('badge-step-6');
+    s4.classList.remove('active');
+    s5.classList.remove('active');
+    s6.classList.remove('active');
+
+    logOutput.textContent = `[QiskitRuntimeService] Conectando ao canal "ibm_quantum"...\n` +
+      `[Backend] Selecionado: ${selectedBackend} (Status: Operational, Queue: ~3 jobs)\n`;
+    liveStatus.textContent = 'Passo 1 & 2: Autenticando...';
+
+    // Timeline dos passos
+    setTimeout(() => {
+      // Passo 3 e 4: Circuito e Transpilação
+      s4.classList.add('active');
+      liveStatus.textContent = 'Passo 4: Transpilando (ISA PassManager)...';
+      logOutput.textContent += `[Transpiler] Optimization level: 1\n` +
+        `[Transpiler] Decompondo H -> [Rz(π/2), SX, Rz(π/2)]\n` +
+        `[Transpiler] Mapeando CNOT(0,1) -> ECR(14, 15) nativo da QPU\n` +
+        `[Transpiler] Circuito ISA pronto: profundidade física = 5 pulsos\n`;
+    }, 700);
+
+    setTimeout(() => {
+      // Passo 5: SamplerV2 e Fila
+      const fakeJobId = 'cj' + Math.random().toString(36).substring(2, 10) + 'ab';
+      s5.classList.add('active');
+      liveStatus.textContent = 'Passo 5: Fila IBM Cloud (SamplerV2)...';
+      logOutput.textContent += `[SamplerV2] Enviando job para a QPU ${selectedBackend}...\n` +
+        `[IBM Quantum] Job ID gerado: ${fakeJobId}\n` +
+        `[IBM Quantum] Status: In Queue (Posição 1/2)...\n` +
+        `[QPU Pulse Engine] Disparando ${totalShots} shots com tempo de repetição de 250µs...\n`;
+    }, 1500);
+
+    setTimeout(() => {
+      // Passo 6: Resultados e Histogramas
+      s6.classList.add('active');
+      liveStatus.textContent = 'Concluído (Job Done)';
+
+      // Gera os counts de acordo com o modelo de ruído
+      let noiseRatio = 0.025; // Realista padrão ~2.5%
+      if (noiseMode === 'none' || selectedBackend === 'aer_ideal') noiseRatio = 0.0;
+      else if (noiseMode === 'high') noiseRatio = 0.065;
+
+      const noiseCountsTotal = Math.round(totalShots * noiseRatio);
+      const signalCountsTotal = totalShots - noiseCountsTotal;
+
+      // Distribuição binomial aleatória próxima de 50/50 com leve jitter estatístico
+      const jitterA = Math.round((Math.random() - 0.5) * (signalCountsTotal * 0.04));
+      const c00 = Math.round(signalCountsTotal / 2) + jitterA;
+      const c11 = signalCountsTotal - c00;
+
+      const n01 = Math.round(noiseCountsTotal * (0.45 + Math.random() * 0.1));
+      const n10 = noiseCountsTotal - n01;
+
+      jobCounts = {
+        '00': Math.max(0, c00),
+        '11': Math.max(0, c11),
+        '01': Math.max(0, n01),
+        '10': Math.max(0, n10)
+      };
+
+      logOutput.textContent += `[IBM Quantum] Job concluído com sucesso!\n` +
+        `[Resultado Clássico] Contagem das medições: {'00': ${jobCounts['00']}, '11': ${jobCounts['11']}, '01': ${jobCounts['01']}, '10': ${jobCounts['10']}}\n` +
+        `[Fidelidade de Estado]: ${((signalCountsTotal / totalShots) * 100).toFixed(1)}%\n`;
+
+      if (noiseMode === 'none' || selectedBackend === 'aer_ideal') {
+        histExplain.innerHTML = `🌟 <strong>Modo Simulador Ideal (Aer):</strong> Zero ruído térmico. Todas as medições recaíram com perfeição nos estados emaranhados <code>00</code> e <code>11</code>!`;
+      } else {
+        histExplain.innerHTML = `🔬 <strong>Resultado Real na QPU (${selectedBackend}):</strong> O estado teórico é $|\\Phi^+\\rangle = \\frac{|00\\rangle + |11\\rangle}{\\sqrt{2}}$. Os <strong>${noiseCountsTotal} disparos em |01⟩ e |10⟩</strong> demonstram a decoerência térmica real ($T_1/T_2$) e erros de leitura nos medidores Josephson a 15mK!`;
+      }
+
+      renderQiskitHist();
+      isRunningJob = false;
+      runBtn.disabled = false;
+      runBtn.textContent = '🚀 Enviar Job via SamplerV2';
+
+      // Muda para a sub-aba de histograma se o usuário ainda não tiver visto
+      const histTabBtn = document.querySelector('[data-subtab="subtab-histogram"]');
+      if (histTabBtn) histTabBtn.click();
+    }, 2400);
+  }
+
+  // Copiar código Python
+  copyBtn.addEventListener('click', () => {
+    const codeText = document.getElementById('qiskit-code-display').innerText;
+    navigator.clipboard.writeText(codeText).then(() => {
+      const orig = copyBtn.textContent;
+      copyBtn.textContent = '✅ Copiado!';
+      setTimeout(() => { copyBtn.textContent = orig; }, 1500);
+    });
+  });
+
+  runBtn.addEventListener('click', runQiskitJob);
+  resetBtn.addEventListener('click', () => {
+    jobCounts = { '00': 501, '11': 498, '01': 14, '10': 11 };
+    totalShots = 1024;
+    renderQiskitHist();
+    logOutput.textContent = `[Sistema] Resetado. Selecione a QPU e envie um novo job.`;
+    liveStatus.textContent = 'Pronto para Enviar';
+    document.getElementById('badge-step-4').classList.remove('active');
+    document.getElementById('badge-step-5').classList.remove('active');
+    document.getElementById('badge-step-6').classList.remove('active');
+  });
+
+  backendSelect.addEventListener('change', () => {
+    selectedBackend = backendSelect.value;
+    chipBackendName.textContent = selectedBackend;
+    if (selectedBackend === 'aer_ideal') {
+      chipCnotError.textContent = '0.00% (Ideal)';
+      noiseSelect.value = 'none';
+    } else {
+      chipCnotError.textContent = (0.75 + Math.random() * 0.35).toFixed(2) + '%';
+    }
+    renderQpuChip();
+  });
+
+  window.renderQpuChip = renderQpuChip;
+  window.renderQiskitHist = renderQiskitHist;
+
+  renderCircuits();
+  renderQpuChip();
+  renderQiskitHist();
 }

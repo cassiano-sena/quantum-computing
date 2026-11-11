@@ -1183,3 +1183,349 @@ select {
   font-size: 0.8rem;
   border-top: 1px solid var(--border-subtle);
 }
+
+/* =========================================================================
+   ESTILOS DO MÓDULO 6: QISKIT & IBM QUANTUM RUNTIME
+   ========================================================================= */
+.qiskit-controls-bar {
+  margin-bottom: 1rem;
+}
+
+.qiskit-pipeline-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 0.8rem 1.2rem;
+  margin-bottom: 1.2rem;
+  overflow-x: auto;
+  gap: 0.5rem;
+}
+
+.q-step-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-subtle);
+  transition: all 0.25s ease;
+  min-width: 95px;
+}
+
+.q-step-badge .step-num {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-muted);
+  padding: 0.05rem 0.45rem;
+  border-radius: 99px;
+}
+
+.q-step-badge .step-title {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.q-step-badge small {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.q-step-badge.active {
+  background: rgba(6, 182, 212, 0.12);
+  border-color: var(--quantum-primary);
+  box-shadow: 0 0 14px rgba(6, 182, 212, 0.2);
+}
+
+.q-step-badge.active .step-num {
+  background: var(--quantum-primary);
+  color: #020617;
+  font-weight: 800;
+}
+
+.q-step-badge.active .step-title {
+  color: #67e8f9;
+}
+
+.q-step-divider {
+  flex: 1;
+  height: 2px;
+  background: rgba(148, 163, 184, 0.2);
+  min-width: 14px;
+}
+
+.qiskit-split-arena {
+  grid-template-columns: 1fr 1fr;
+}
+
+@media (max-width: 1080px) {
+  .qiskit-split-arena {
+    grid-template-columns: 1fr;
+  }
+}
+
+.code-terminal {
+  background: #020617;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+.code-terminal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #0b1120;
+  padding: 0.45rem 0.85rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+.term-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.term-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.term-dot.red { background: #ef4444; }
+.term-dot.yellow { background: #f59e0b; }
+.term-dot.green { background: #10b981; }
+
+.term-title {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  color: var(--text-muted);
+}
+
+.code-content {
+  padding: 0.85rem 1rem;
+  margin: 0;
+  max-height: 380px;
+  overflow-y: auto;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  line-height: 1.55;
+  color: #cbd5e1;
+}
+
+.py-keyword { color: #c084fc; font-weight: 700; }
+.py-str { color: #86efac; }
+.py-comment { color: #64748b; font-style: italic; }
+.py-bool { color: #fb923c; font-weight: 700; }
+
+.qiskit-terminal-log {
+  background: #020617;
+  border: 1px solid rgba(6, 182, 212, 0.28);
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.terminal-log-header {
+  background: #0b1120;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+.live-status-pill {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  padding: 0.12rem 0.5rem;
+  border-radius: 99px;
+  background: rgba(6, 182, 212, 0.15);
+  color: #67e8f9;
+  border: 1px solid var(--quantum-border);
+}
+
+.terminal-log-body {
+  padding: 0.75rem 0.85rem;
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  color: #93c5fd;
+  min-height: 110px;
+  max-height: 150px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+.qiskit-view-tabs {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 0.5rem;
+}
+
+.q-tab-btn {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid transparent;
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.q-tab-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.q-tab-btn.active {
+  background: rgba(6, 182, 212, 0.15);
+  border-color: var(--quantum-border);
+  color: #67e8f9;
+}
+
+.qiskit-subtab-content {
+  display: none;
+  flex-direction: column;
+  gap: 0.85rem;
+  animation: fadeIn 0.25s ease;
+}
+
+.qiskit-subtab-content.active {
+  display: flex;
+}
+
+.circuit-compare-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.circuit-box-col {
+  background: var(--bg-card-inner);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 0.75rem;
+}
+
+.col-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  font-size: 0.82rem;
+}
+
+.col-title small {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+}
+
+.circuit-render {
+  padding: 0.5rem;
+  background: #020617;
+  border-radius: 8px;
+  overflow-x: auto;
+}
+
+.circuit-wire-svg {
+  width: 100%;
+  min-width: 440px;
+  height: 90px;
+  display: block;
+}
+
+.chip-viewer-box {
+  background: var(--bg-card-inner);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.chip-specs-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+}
+
+@media (max-width: 600px) {
+  .chip-specs-bar {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.spec-item {
+  background: rgba(255, 255, 255, 0.03);
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.spec-item small {
+  display: block;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+.spec-item strong {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: #fff;
+}
+
+.chip-diagram-wrapper {
+  background: #020617;
+  border-radius: 8px;
+  padding: 0.5rem;
+  display: flex;
+  justify-content: center;
+}
+
+#qpu-chip-canvas {
+  width: 100%;
+  height: 220px;
+  display: block;
+}
+
+.histogram-results-box {
+  background: var(--bg-card-inner);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.hist-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+#qiskit-hist-canvas {
+  width: 100%;
+  height: 210px;
+  display: block;
+  background: #020617;
+  border-radius: 8px;
+}
+

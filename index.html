@@ -65,6 +65,10 @@
       <span class="tab-num">05</span>
       <span class="tab-label">Emaranhamento &amp; Circuitos</span>
     </button>
+    <button class="tab-btn" data-tab="tab-qiskit">
+      <span class="tab-num">06</span>
+      <span class="tab-label">Qiskit &amp; QPU IBM Runtime</span>
+    </button>
   </nav>
 
   <main class="container">
@@ -622,6 +626,263 @@
           <div class="measurement-result" id="bell-measure-log">
             Clique em <strong>Criar Par de Bell |Φ⁺⟩</strong> e depois meça apenas o Qubit A para observar o colapso instantâneo do Qubit B!
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         TAB 6: QISKIT & EXECUÇÃO EM HARDWARE REAL (IBM QUANTUM RUNTIME)
+         ===================================================================== -->
+    <section id="tab-qiskit" class="tab-panel">
+      <div class="section-intro">
+        <div>
+          <h2>6. Qiskit na Prática: Do Código Python ao Hardware Quântico Real (IBM Quantum)</h2>
+          <p>
+            Veja o ciclo de vida completo de um script utilizando <strong>Qiskit 1.0+</strong> e <strong>Qiskit Runtime (SamplerV2)</strong>:
+            desde a definição matemática do <code>QuantumCircuit</code>, passando pela <strong>Transpilação (Pass Manager ISA)</strong>
+            para a topologia física dos acopladores supercondutores da IBM, até a execução com <strong>ruído térmico e decoerência real</strong> vs <strong>simulador ideal</strong>!
+          </p>
+        </div>
+      </div>
+
+      <!-- Barra de Controle do Pipeline Qiskit -->
+      <div class="control-bar qiskit-controls-bar">
+        <div class="control-group">
+          <label for="qiskit-target-backend">Processador Quântico (QPU IBM):</label>
+          <select id="qiskit-target-backend">
+            <option value="ibm_brisbane">ibm_brisbane (Eagle r3 - 127 Qubits)</option>
+            <option value="ibm_kyoto" selected>ibm_kyoto (Eagle r3 - 127 Qubits)</option>
+            <option value="ibm_sherbrooke">ibm_sherbrooke (Eagle r3 - 127 Qubits)</option>
+            <option value="aer_ideal">aer_simulator (Simulador Sem Ruído Ideal)</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label for="qiskit-shots">Disparos (Shots):</label>
+          <select id="qiskit-shots">
+            <option value="512">512 shots</option>
+            <option value="1024" selected>1024 shots</option>
+            <option value="4096">4096 shots</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label for="qiskit-noise-level">Ruído Físico da QPU (T1/T2 &amp; Readout Error):</label>
+          <select id="qiskit-noise-level">
+            <option value="none">0% Ruído (Ideal Matemático)</option>
+            <option value="calibrated" selected>Realista (~2.5% Readout / Gate Error)</option>
+            <option value="high">Alto Ruído / Decoerência (~6.0%)</option>
+          </select>
+        </div>
+
+        <div class="control-actions">
+          <button class="btn btn-quantum" id="btn-run-qiskit-job">🚀 Enviar Job via SamplerV2</button>
+          <button class="btn btn-outline" id="btn-reset-qiskit">🔄 Resetar Pipeline</button>
+        </div>
+      </div>
+
+      <!-- Pipeline Visual dos 6 Passos do Código do Usuário -->
+      <div class="qiskit-pipeline-stepper" id="qiskit-stepper">
+        <div class="q-step-badge active" data-step="1">
+          <span class="step-num">1</span>
+          <span class="step-title">Autenticação</span>
+          <small>QiskitRuntimeService</small>
+        </div>
+        <div class="q-step-divider"></div>
+        <div class="q-step-badge active" data-step="2">
+          <span class="step-num">2</span>
+          <span class="step-title">Least Busy</span>
+          <small>QPU Selection</small>
+        </div>
+        <div class="q-step-divider"></div>
+        <div class="q-step-badge active" data-step="3">
+          <span class="step-num">3</span>
+          <span class="step-title">Circuito</span>
+          <small>H(0) + CX(0,1)</small>
+        </div>
+        <div class="q-step-divider"></div>
+        <div class="q-step-badge" data-step="4" id="badge-step-4">
+          <span class="step-num">4</span>
+          <span class="step-title">Transpilação ISA</span>
+          <small>PassManager (Level 1)</small>
+        </div>
+        <div class="q-step-divider"></div>
+        <div class="q-step-badge" data-step="5" id="badge-step-5">
+          <span class="step-num">5</span>
+          <span class="step-title">Job SamplerV2</span>
+          <small>Cloud Queue &amp; Shots</small>
+        </div>
+        <div class="q-step-divider"></div>
+        <div class="q-step-badge" data-step="6" id="badge-step-6">
+          <span class="step-num">6</span>
+          <span class="step-title">Resultados</span>
+          <small>Counts Histogram</small>
+        </div>
+      </div>
+
+      <div class="split-arena qiskit-split-arena">
+        <!-- LADO ESQUERDO: CÓDIGO PYTHON INTERATIVO COM SINTAXE HIGHLIGHT -->
+        <div class="panel qiskit-code-panel">
+          <div class="panel-header">
+            <span class="badge badge-quantum">QISKIT RUNTIME SCRIPT (PYTHON)</span>
+            <h3>Código Executado no IBM Quantum</h3>
+          </div>
+
+          <div class="code-terminal">
+            <div class="code-terminal-header">
+              <div class="term-dots">
+                <span class="term-dot red"></span>
+                <span class="term-dot yellow"></span>
+                <span class="term-dot green"></span>
+              </div>
+              <span class="term-title">bell_state_runtime.py</span>
+              <button class="btn btn-outline btn-sm" id="btn-copy-qiskit-code" title="Copiar código">📋 Copiar Código</button>
+            </div>
+            <pre class="code-content"><code id="qiskit-code-display"><span class="py-keyword">from</span> qiskit <span class="py-keyword">import</span> QuantumCircuit
+<span class="py-keyword">from</span> qiskit.transpiler.preset_passmanagers <span class="py-keyword">import</span> generate_preset_pass_manager
+<span class="py-keyword">from</span> qiskit_ibm_runtime <span class="py-keyword">import</span> QiskitRuntimeService, SamplerV2 <span class="py-keyword">as</span> Sampler
+
+<span class="py-comment"># 1. Autenticação na nuvem IBM Quantum</span>
+service = QiskitRuntimeService(channel=<span class="py-str">"ibm_quantum"</span>)
+
+<span class="py-comment"># 2. Seleciona a QPU real menos ocupada</span>
+backend = service.least_busy(operational=<span class="py-bool">True</span>, simulator=<span class="py-bool">False</span>)
+<span class="py-keyword">print</span>(<span class="py-str">f"Executando na QPU: {backend.name}"</span>)
+
+<span class="py-comment"># 3. Criação do circuito quântico abstrato (2 qubits)</span>
+qc = QuantumCircuit(2)
+qc.h(0)          <span class="py-comment"># Coloca o qubit 0 em superposição (|0⟩ + |1⟩)/√2</span>
+qc.cx(0, 1)      <span class="py-comment"># Emaranha o qubit 0 com o qubit 1 (porta CNOT)</span>
+qc.measure_all() <span class="py-comment"># Mede ambos os qubits para bits clássicos</span>
+
+<span class="py-comment"># 4. Transpilação: converte o circuito para as portas físicas nativas do chip</span>
+pm = generate_preset_pass_manager(backend=backend, optimization_level=1)
+isa_circuit = pm.run(qc)
+
+<span class="py-comment"># 5. Envio do job via Primitive Sampler (1024 disparos/shots)</span>
+sampler = Sampler(mode=backend)
+job = sampler.run([isa_circuit], shots=1024)
+<span class="py-keyword">print</span>(<span class="py-str">f"Job ID enviado: {job.job_id()}"</span>)
+
+<span class="py-comment"># 6. Aguarda a execução na fila e recupera os resultados clássicos</span>
+result = job.result()
+counts = result[0].data.meas.get_counts()
+<span class="py-keyword">print</span>(<span class="py-str">"Contagem das medições:"</span>, counts)</code></pre>
+          </div>
+
+          <!-- Console Terminal de Saída do Job -->
+          <div class="qiskit-terminal-log">
+            <div class="terminal-log-header">
+              <span>Console de Execução / IBM Quantum Status:</span>
+              <span class="live-status-pill" id="qiskit-live-status">Pronto para Enviar</span>
+            </div>
+            <div class="terminal-log-body" id="qiskit-log-output">
+[Sistema] Selecione a QPU e clique em "Enviar Job via SamplerV2" para disparar a execução.
+            </div>
+          </div>
+        </div>
+
+        <!-- LADO DIREITO: VISUALIZAÇÃO PRÁTICA DO CIRCUITO, HARDWARE E RESULTADOS -->
+        <div class="panel qiskit-visual-panel">
+          <div class="panel-header">
+            <span class="badge badge-quantum">ANÁLISE FÍSICA &amp; RESULTADOS</span>
+            <h3>Diagrama do Circuito &amp; Dispersão em Hardware Real</h3>
+          </div>
+
+          <!-- Abas internas da visualização prática -->
+          <div class="qiskit-view-tabs">
+            <button class="q-tab-btn active" data-subtab="subtab-circuit">Circuito Abstrato vs ISA</button>
+            <button class="q-tab-btn" data-subtab="subtab-hardware">Topologia da QPU (Chip Eagle)</button>
+            <button class="q-tab-btn" data-subtab="subtab-histogram">Histograma &amp; Ruído Real</button>
+          </div>
+
+          <!-- Sub-Aba 1: Circuitos Abstrato vs Transpilado -->
+          <div class="qiskit-subtab-content active" id="subtab-circuit">
+            <div class="circuit-compare-box">
+              <div class="circuit-box-col">
+                <div class="col-title">
+                  <strong>Circuito Lógico (Abstrato)</strong>
+                  <small>Portas conceituais: H + CNOT + Measure</small>
+                </div>
+                <div class="circuit-render" id="abstract-circuit-svg">
+                  <!-- Renderizado via SVG/Canvas -->
+                </div>
+              </div>
+
+              <div class="circuit-box-col">
+                <div class="col-title">
+                  <strong>Circuito Físico ISA (Transpilado para IBM)</strong>
+                  <small>Portas nativas: Rz, SX, ECR / CZ físico</small>
+                </div>
+                <div class="circuit-render isa-render" id="isa-circuit-svg">
+                  <!-- Renderizado via SVG/Canvas -->
+                </div>
+              </div>
+            </div>
+            <div class="insight-box quantum-insight">
+              <strong>O que é o ISA Circuit (Passo 4)?</strong> QPUs reais da IBM não possuem fisicamente uma porta Hadamard direta nem CNOT genérica em qualquer par de qubits! O <code>generate_preset_pass_manager</code> decompõe $H$ em rotações de micro-ondas $R_z$ e $\sqrt{X}$ (SX), e mapeia $CX$ para a porta nativa de acoplamento (ex: ECR) nos qubits vizinhos do chip!
+            </div>
+          </div>
+
+          <!-- Sub-Aba 2: Visualização da Topologia Física do Chip -->
+          <div class="qiskit-subtab-content" id="subtab-hardware">
+            <div class="chip-viewer-box">
+              <div class="chip-specs-bar">
+                <div class="spec-item">
+                  <small>Backend Atual</small>
+                  <strong id="chip-backend-name">ibm_kyoto</strong>
+                </div>
+                <div class="spec-item">
+                  <small>Arquitetura</small>
+                  <strong>Eagle r3 (Heavy-Hex)</strong>
+                </div>
+                <div class="spec-item">
+                  <small>Qubits Físicos Alocados</small>
+                  <strong id="chip-qubits-pair">Q0 ↔ Q1 (Fisicamente: #14 ↔ #15)</strong>
+                </div>
+                <div class="spec-item">
+                  <small>Erro de Porta 2-Qubits</small>
+                  <strong id="chip-cnot-error">0.82%</strong>
+                </div>
+              </div>
+
+              <div class="chip-diagram-wrapper">
+                <canvas id="qpu-chip-canvas" width="560" height="230"></canvas>
+              </div>
+            </div>
+            <div class="insight-box quantum-insight">
+              <strong>Acoplamento Físico:</strong> No chip real, qubits são osciladores LC supercondutores (Transmons) a $15\text{ mK}$ (-273.13°C). Apenas qubits conectados por linhas de ressonância no mapa <em>Heavy-Hex</em> podem interagir. Se você criar um CNOT entre qubits distantes, o transpiler insere portas SWAP adicionais!
+            </div>
+          </div>
+
+          <!-- Sub-Aba 3: Histograma de Resultados & Comparativo de Ruído -->
+          <div class="qiskit-subtab-content" id="subtab-histogram">
+            <div class="histogram-results-box">
+              <div class="hist-metrics">
+                <div class="metric-card">
+                  <small>Fidelidade do Estado |Φ⁺⟩</small>
+                  <strong id="hist-fidelity">97.5%</strong>
+                </div>
+                <div class="metric-card">
+                  <small>Pares Correlacionados (|00⟩ + |11⟩)</small>
+                  <strong id="hist-bell-count">999 / 1024</strong>
+                </div>
+                <div class="metric-card">
+                  <small>Erros Físicos (|01⟩ + |10⟩)</small>
+                  <strong id="hist-noise-count">25 / 1024 (2.4%)</strong>
+                </div>
+              </div>
+
+              <div class="chart-box">
+                <canvas id="qiskit-hist-canvas" width="560" height="220"></canvas>
+              </div>
+            </div>
+
+            <div class="insight-box quantum-insight" id="qiskit-hist-explain">
+              <strong>Teoria vs Prática:</strong> Matematicamente, o Estado de Bell puro resulta em exatamente $50\%$ para <code>00</code> e $50\%$ para <code>11</code> (zero para <code>01</code> e <code>10</code>). No hardware quântico real da IBM, o ruído térmico, imperfeição nos pulsos de micro-ondas e erros de leitura causam pequenas contagens espúrias em <code>01</code> e <code>10</code> — exatamente como demonstrado no seu código!
+            </div>
+          </div>
+
         </div>
       </div>
     </section>
