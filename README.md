@@ -75,7 +75,7 @@ E acesse no navegador: `http://localhost:3000`.
 ---
 
 ### 6. Qiskit na Prática: Do Código Python ao Hardware Real (IBM Quantum Runtime)
-* **Integração com o seu script Qiskit 1.0+:**
+* **Integração com a biblioteca Qiskit 1.0+:**
   * Linha do tempo interativa dos 6 passos (`QiskitRuntimeService`, `least_busy`, `QuantumCircuit`, `PassManager ISA`, `SamplerV2` e `counts`).
   * **Circuito Abstrato vs Circuito ISA (Físico):** Mostra como o transpilador decompõe a porta $H$ em rotações de micro-ondas $[R_z, SX, R_z]$ e mapeia o $CX$ para a porta nativa de acoplamento físico **ECR**.
   * **Topologia do Chip IBM (Eagle 127 Qubits):** Visualização interativa da arquitetura em grade *Heavy-Hex* refrigerada a $15\text{ mK}$ (-273°C) e o par de qubits físicos alocados (#14 e #15).
