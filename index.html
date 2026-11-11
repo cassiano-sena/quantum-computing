@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuantumLab — Computação Binária vs Computação Quântica na Prática</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="bg-grid"></div>
+  <div class="bg-glow bg-glow-binary"></div>
+  <div class="bg-glow bg-glow-quantum"></div>
+
+  <!-- Top Header -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-icon">
+        <span class="bit-badge">01</span>
+        <span class="vs-divider">⚡</span>
+        <span class="qubit-badge">|ψ⟩</span>
+      </div>
+      <div>
+        <h1>QuantumLab <span class="subtitle-pill">Na Prática</span></h1>
+        <p class="subtitle">Simulador Interativo: Computação Binária Clássica vs Computação Quântica Real</p>
+      </div>
+    </div>
+
+    <div class="header-summary">
+      <div class="summary-chip binary-chip">
+        <span class="dot binary-dot"></span>
+        <div>
+          <small>Lógica Binária (CMOS)</small>
+          <strong>1 estado por vez (0 ou 1)</strong>
+        </div>
+      </div>
+      <div class="summary-chip quantum-chip">
+        <span class="dot quantum-dot"></span>
+        <div>
+          <small>Mecânica Quântica</small>
+          <strong>Superposição, Fase &amp; Interferência</strong>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <nav class="lab-tabs" aria-label="Laboratórios">
+    <button class="tab-btn active" data-tab="tab-bit-qubit">
+      <span class="tab-num">01</span>
+      <span class="tab-label">Bit vs Qubit &amp; Bloch 3D</span>
+    </button>
+    <button class="tab-btn" data-tab="tab-grover">
+      <span class="tab-num">02</span>
+      <span class="tab-label">Corrida Prática: Busca (Grover)</span>
+    </button>
+    <button class="tab-btn" data-tab="tab-scaling">
+      <span class="tab-num">03</span>
+      <span class="tab-label">Escala Exponencial (2<sup>N</sup> Estados)</span>
+    </button>
+    <button class="tab-btn" data-tab="tab-deutsch">
+      <span class="tab-num">04</span>
+      <span class="tab-label">Interferência (Deutsch-Jozsa)</span>
+    </button>
+    <button class="tab-btn" data-tab="tab-entanglement">
+      <span class="tab-num">05</span>
+      <span class="tab-label">Emaranhamento &amp; Circuitos</span>
+    </button>
+  </nav>
+
+  <main class="container">
+
+    <!-- =====================================================================
+         TAB 1: BIT CLASSICO VS QUBIT (ESFERA DE BLOCH + MEDIÇÃO)
+         ===================================================================== -->
+    <section id="tab-bit-qubit" class="tab-panel active">
+      <div class="section-intro">
+        <div>
+          <h2>1. A Unidade Fundamental: Bit Físico vs Qubit em Superposição</h2>
+          <p>
+            Um <strong>bit clássico</strong> é como um interruptor: em qualquer instante, a tensão no transistor representa estritamente <code>0</code> ou <code>1</code>.
+            Já um <strong>qubit</strong> existe num estado contínuo <code>|ψ⟩ = α|0⟩ + β·e<sup>iφ</sup>|1⟩</code> até o momento da <strong>medição</strong>, quando colapsa probabilisticamente.
+          </p>
+        </div>
+      </div>
+
+      <div class="split-arena">
+        <!-- LADO BINÁRIO -->
+        <div class="panel binary-panel">
+          <div class="panel-header">
+            <span class="badge badge-binary">COMPUTAÇÃO BINÁRIA</span>
+            <h3>Transistor / Bit Determinístico</h3>
+          </div>
+
+          <div class="binary-switch-box">
+            <div class="transistor-visual" id="classical-bit-visual">
+              <div class="voltage-tag" id="classical-voltage">0.0V (Nível Lógico Baixo)</div>
+              <div class="big-bit-display" id="classical-bit-value">0</div>
+              <div class="switch-track" id="classical-switch-btn" title="Clique para alternar o bit">
+                <div class="switch-thumb"></div>
+              </div>
+            </div>
+
+            <div class="gate-toolbar">
+              <span class="toolbar-title">Portas Clássicas:</span>
+              <button class="btn btn-binary" id="btn-classical-not">Porta NOT (Inversor)</button>
+              <button class="btn btn-outline" id="btn-classical-set0">Forçar 0</button>
+              <button class="btn btn-outline" id="btn-classical-set1">Forçar 1</button>
+            </div>
+
+            <div class="prob-bars">
+              <div class="prob-row">
+                <span class="state-label">Estado <code>0</code></span>
+                <div class="progress-track">
+                  <div class="progress-fill binary-fill" id="c-prob-0" style="width: 100%"></div>
+                </div>
+                <span class="prob-val" id="c-prob-0-txt">100%</span>
+              </div>
+              <div class="prob-row">
+                <span class="state-label">Estado <code>1</code></span>
+                <div class="progress-track">
+                  <div class="progress-fill binary-fill" id="c-prob-1" style="width: 0%"></div>
+                </div>
+                <span class="prob-val" id="c-prob-1-txt">0%</span>
+              </div>
+            </div>
+
+            <div class="insight-box binary-insight">
+              <strong>Na prática:</strong> Se você ler este bit 1.000 vezes seguidas sem alterá-lo, obterá <strong>1.000 vezes o mesmo valor</strong>. Não existe incerteza nem fase.
+            </div>
+          </div>
+        </div>
+
+        <!-- LADO QUÂNTICO -->
+        <div class="panel quantum-panel">
+          <div class="panel-header">
+            <span class="badge badge-quantum">COMPUTAÇÃO QUÂNTICA</span>
+            <h3>Qubit &amp; Esfera de Bloch 3D Interativa</h3>
+          </div>
+
+          <div class="qubit-workbench">
+            <div class="bloch-wrapper">
+              <canvas id="bloch-canvas" width="300" height="300"></canvas>
+              <div class="bloch-hint">🖱️ Arraste a esfera para girar em 3D</div>
+            </div>
+
+            <div class="qubit-controls">
+              <div class="ket-formula" id="qubit-ket-display">
+                |ψ⟩ = 1.00|0⟩ + 0.00|1⟩
+              </div>
+
+              <div class="gate-toolbar">
+                <span class="toolbar-title">Portas Quânticas (Unitárias):</span>
+                <div class="gate-grid">
+                  <button class="btn btn-quantum" data-qgate="H" title="Cria superposição uniforme (Hadamard)">H (Hadamard)</button>
+                  <button class="btn btn-quantum" data-qgate="X" title="Inversão quântica (Pauli-X / NOT)">X (Pauli-X)</button>
+                  <button class="btn btn-quantum" data-qgate="Y" title="Rotação em Y (Pauli-Y)">Y (Pauli-Y)</button>
+                  <button class="btn btn-quantum" data-qgate="Z" title="Inverte a fase de |1⟩ (Pauli-Z)">Z (Fase π)</button>
+                  <button class="btn btn-quantum" data-qgate="S" title="Fase de 90° (π/2)">S (Fase π/2)</button>
+                  <button class="btn btn-quantum" data-qgate="RY" title="Rotação de 45° no eixo Y">R<sub>y</sub>(π/4)</button>
+                </div>
+              </div>
+
+              <div class="sliders-box">
+                <label>
+                  <span>Ângulo Polar θ (Superposição |0⟩ ↔ |1⟩): <strong id="theta-val">0°</strong></span>
+                  <input type="range" id="slider-theta" min="0" max="180" value="0" />
+                </label>
+                <label>
+                  <span>Fase Relativa φ (Rotação Azimutal): <strong id="phi-val">0°</strong></span>
+                  <input type="range" id="slider-phi" min="0" max="360" value="0" />
+                </label>
+              </div>
+
+              <div class="prob-bars">
+                <div class="prob-row">
+                  <span class="state-label">P(|0⟩) = |α|²</span>
+                  <div class="progress-track">
+                    <div class="progress-fill quantum-fill" id="q-prob-0" style="width: 100%"></div>
+                  </div>
+                  <span class="prob-val" id="q-prob-0-txt">100.0%</span>
+                </div>
+                <div class="prob-row">
+                  <span class="state-label">P(|1⟩) = |β|²</span>
+                  <div class="progress-track">
+                    <div class="progress-fill quantum-fill" id="q-prob-1" style="width: 0%"></div>
+                  </div>
+                  <span class="prob-val" id="q-prob-1-txt">0.0%</span>
+                </div>
+              </div>
+
+              <div class="measurement-actions">
+                <button class="btn btn-measure" id="btn-measure-once">
+                  🔬 Medir 1x (Colapsar Estado)
+                </button>
+                <button class="btn btn-shots" id="btn-measure-1000">
+                  📊 Simular 1.000 Medições (Shots)
+                </button>
+                <button class="btn btn-outline" id="btn-reset-qubit">Resetar |0⟩</button>
+              </div>
+
+              <div class="measurement-result" id="qubit-measure-log">
+                Aplique a porta <strong>H (Hadamard)</strong> para colocar o qubit em superposição 50%/50% e clique em Medir!
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         TAB 2: CORRIDA NA PRÁTICA — FORÇA BRUTA BINÁRIA VS ALGORITMO DE GROVER
+         ===================================================================== -->
+    <section id="tab-grover" class="tab-panel">
+      <div class="section-intro">
+        <div>
+          <h2>2. Na Prática: Busca de Senha/Alvo — Força Bruta Linear vs Algoritmo de Grover</h2>
+          <p>
+            Imagine um cofre digital com <strong>N = 2<sup>n</sup></strong> combinações possíveis e apenas <strong>1 combinação correta</strong>.
+            Veja lado a lado como a <strong>CPU Clássica</strong> precisa testar endereço por endereço (<code>O(N)</code>), enquanto o <strong>Algoritmo Quântico de Grover</strong> usa <em>Inversão de Fase (Oráculo)</em> + <em>Inversão em Torno da Média (Difusão)</em> para amplificar a resposta certa em apenas <code>≈ (π/4)√N</code> passos!
+          </p>
+        </div>
+      </div>
+
+      <div class="control-bar grover-controls">
+        <div class="control-group">
+          <label for="grover-qubits">Tamanho do Banco de Dados:</label>
+          <select id="grover-qubits">
+            <option value="3">3 Bits / Qubits (8 endereços)</option>
+            <option value="4" selected>4 Bits / Qubits (16 endereços)</option>
+            <option value="5">5 Bits / Qubits (32 endereços)</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label for="grover-target">Alvo Secreto (clique nos cartões ou escolha):</label>
+          <select id="grover-target"></select>
+        </div>
+
+        <div class="control-actions">
+          <button class="btn btn-quantum" id="btn-grover-step">⏭️ Executar 1 Passo (Clock)</button>
+          <button class="btn btn-measure" id="btn-grover-auto">▶️ Rodar Corrida Automática</button>
+          <button class="btn btn-outline" id="btn-grover-reset">🔄 Reiniciar Corrida</button>
+        </div>
+      </div>
+
+      <div class="split-arena">
+        <!-- BUSCA CLÁSSICA -->
+        <div class="panel binary-panel">
+          <div class="panel-header">
+            <span class="badge badge-binary">CPU BINÁRIA (SEQUENCIAL)</span>
+            <h3>Busca Linear O(N) — 1 Endereço por Ciclo</h3>
+          </div>
+
+          <div class="metrics-strip">
+            <div class="metric-card">
+              <small>Consultas ao Oráculo</small>
+              <strong id="classical-steps-count">0</strong>
+            </div>
+            <div class="metric-card">
+              <small>Endereço Testado Agora</small>
+              <strong id="classical-current-check">—</strong>
+            </div>
+            <div class="metric-card">
+              <small>Status</small>
+              <strong id="classical-search-status">Aguardando início</strong>
+            </div>
+          </div>
+
+          <div class="classical-grid" id="classical-search-grid"></div>
+
+          <div class="insight-box binary-insight" id="classical-grover-explain">
+            No computador clássico, cada consulta avalia apenas <strong>um único estado</strong> <code>x</code>. No pior caso, leva <code>N</code> passos; em média, <code>N/2</code> passos.
+          </div>
+        </div>
+
+        <!-- BUSCA QUÂNTICA DE GROVER -->
+        <div class="panel quantum-panel">
+          <div class="panel-header">
+            <span class="badge badge-quantum">QPU QUÂNTICA (ALGORITMO DE GROVER)</span>
+            <h3>Amplificação de Amplitude O(√N)</h3>
+          </div>
+
+          <div class="metrics-strip">
+            <div class="metric-card">
+              <small>Consultas Quânticas</small>
+              <strong id="quantum-steps-count">0 / 3</strong>
+            </div>
+            <div class="metric-card">
+              <small>Probabilidade do Alvo</small>
+              <strong id="quantum-target-prob">6.25%</strong>
+            </div>
+            <div class="metric-card">
+              <small>Estágio Quântico</small>
+              <strong id="quantum-stage-label">Superposição Inicial</strong>
+            </div>
+          </div>
+
+          <div class="grover-chart-box">
+            <div class="chart-legend">
+              <span><i class="legend-dot amp-pos"></i> Amplitude Positiva (+α)</span>
+              <span><i class="legend-dot amp-neg"></i> Fase Invertida pelo Oráculo (-α)</span>
+              <span><i class="legend-dot amp-target"></i> Alvo Secreto</span>
+              <span><i class="legend-line mean-line"></i> Média das Amplitudes</span>
+            </div>
+            <canvas id="grover-canvas" width="560" height="270"></canvas>
+          </div>
+
+          <div class="insight-box quantum-insight" id="quantum-grover-explain">
+            <strong>Como funciona na prática:</strong> (1) Todos os estados começam com amplitude <code>1/√N</code>. (2) O <strong>Oráculo</strong> inverte o sinal apenas do estado alvo (<code>α → -α</code>). (3) A <strong>Difusão</strong> reflete todas as amplitudes em torno da média, fazendo o alvo crescer drasticamente enquanto os outros estados sofrem interferência destrutiva!
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         TAB 3: ESCALA EXPONENCIAL (N BITS VS N QUBITS)
+         ===================================================================== -->
+    <section id="tab-scaling" class="tab-panel">
+      <div class="section-intro">
+        <div>
+          <h2>3. Espaço de Estados: Registrador de N Bits vs N Qubits</h2>
+          <p>
+            Aumente o número de bits/qubits abaixo e veja a diferença fundamental: um registrador binário de <strong>N bits</strong> guarda <strong>1 único número de N bits por vez</strong>.
+            Um registrador quântico de <strong>N qubits</strong> em superposição manipula simultaneamente um vetor de <strong>2<sup>N</sup> amplitudes complexas</strong>!
+          </p>
+        </div>
+      </div>
+
+      <div class="control-bar">
+        <div class="control-group wide-slider">
+          <label for="scale-n-slider">
+            Quantidade de Bits / Qubits (N): <strong id="scale-n-label" class="highlight-val">4</strong>
+            <span class="sub-badge" id="scale-states-badge">16 estados simultâneos</span>
+          </label>
+          <input type="range" id="scale-n-slider" min="1" max="8" value="4" />
+        </div>
+        <div class="control-actions">
+          <button class="btn btn-quantum" id="btn-scale-hadamard">Aplicar H<sup>⊗N</sup> (Superposição Total)</button>
+          <button class="btn btn-quantum" id="btn-scale-phase-wave">Aplicar Onda de Fase (Padrão QFT)</button>
+          <button class="btn btn-binary" id="btn-scale-clock">Avançar Clock Binário (+1)</button>
+        </div>
+      </div>
+
+      <div class="split-arena">
+        <div class="panel binary-panel">
+          <div class="panel-header">
+            <span class="badge badge-binary">REGISTRADOR BINÁRIO DE <span class="n-count">4</span> BITS</span>
+            <h3>Apenas 1 Estado Ativo no Barramento</h3>
+          </div>
+
+          <div class="register-wires" id="classical-register-wires"></div>
+
+          <div class="scale-stats">
+            <div class="stat-item">
+              <span>Estados ativos agora:</span>
+              <strong>1 de <span class="two-pow-n">16</span></strong>
+            </div>
+            <div class="stat-item">
+              <span>Informação armazenada na leitura:</span>
+              <strong><span class="n-count">4</span> bits</strong>
+            </div>
+            <div class="stat-item">
+              <span>Ciclos para varrer todo o espaço:</span>
+              <strong><span class="two-pow-n">16</span> ciclos</strong>
+            </div>
+          </div>
+
+          <div class="state-matrix-title">Mapa de Estados Clássicos (1 ativo, 2<sup>N</sup> - 1 inativos):</div>
+          <div class="state-cells-grid" id="classical-cells-grid"></div>
+        </div>
+
+        <div class="panel quantum-panel">
+          <div class="panel-header">
+            <span class="badge badge-quantum">REGISTRADOR QUÂNTICO DE <span class="n-count">4</span> QUBITS</span>
+            <h3>Vetor de Estado de 2<sup>N</sup> Dimensões Complexas</h3>
+          </div>
+
+          <div class="register-wires" id="quantum-register-wires"></div>
+
+          <div class="scale-stats">
+            <div class="stat-item">
+              <span>Estados em superposição agora:</span>
+              <strong id="quantum-active-states-count">16 de 16</strong>
+            </div>
+            <div class="stat-item">
+              <span>RAM clássica p/ simular |ψ⟩:</span>
+              <strong id="quantum-ram-needed">256 Bytes (16 × Complex128)</strong>
+            </div>
+            <div class="stat-item">
+              <span>1 porta quântica atua sobre:</span>
+              <strong>Todos os <span class="two-pow-n">16</span> estados simultaneamente</strong>
+            </div>
+          </div>
+
+          <div class="state-matrix-title">
+            Mapa de Amplitudes &amp; Fases Quânticas (Cor = Fase φ, Brilho = Probabilidade |α|²):
+          </div>
+          <div class="state-cells-grid" id="quantum-cells-grid"></div>
+        </div>
+      </div>
+
+      <!-- Comparador de Escala Extrema -->
+      <div class="panel extreme-scale-panel">
+        <h3>🚀 O que acontece quando N cresce? (Por que supercomputadores clássicos travam ao simular Qubits)</h3>
+        <div class="scale-table-wrapper">
+          <table class="scale-table">
+            <thead>
+              <tr>
+                <th>Bits / Qubits (N)</th>
+                <th>Registrador Binário Clássico</th>
+                <th>Dimensões do Vetor Quântico (2<sup>N</sup>)</th>
+                <th>RAM Clássica Necessária para Simular |ψ⟩</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>4</strong></td>
+                <td>4 bits (1 nibble)</td>
+                <td>16 estados</td>
+                <td>256 Bytes</td>
+              </tr>
+              <tr>
+                <td><strong>10</strong></td>
+                <td>10 bits</td>
+                <td>1.024 estados</td>
+                <td>16 KB</td>
+              </tr>
+              <tr>
+                <td><strong>30</strong></td>
+                <td>30 bits (&lt; 4 Bytes)</td>
+                <td>1.073.741.824 estados</td>
+                <td><strong>16 GB de RAM</strong> (1 PC Gamer inteiro)</td>
+              </tr>
+              <tr>
+                <td><strong>50</strong></td>
+                <td>50 bits (~6.25 Bytes)</td>
+                <td>1,12 × 10<sup>15</sup> estados</td>
+                <td><strong>18 Petabytes</strong> (Supercomputador Frontier)</td>
+              </tr>
+              <tr>
+                <td><strong>300</strong></td>
+                <td>300 bits (37.5 Bytes)</td>
+                <td>2<sup>300</sup> ≈ 2 × 10<sup>90</sup> estados</td>
+                <td><strong>Mais átomos do que existem no Universo observável!</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         TAB 4: INTERFERÊNCIA QUÂNTICA — ALGORITMO DE DEUTSCH-JOZSA
+         ===================================================================== -->
+    <section id="tab-deutsch" class="tab-panel">
+      <div class="section-intro">
+        <div>
+          <h2>4. Interferência na Prática: Algoritmo de Deutsch-Jozsa (Caixa-Preta)</h2>
+          <p>
+            Você recebe um chip misterioso (Oráculo <code>f(x)</code>) que recebe 3 bits (<code>000</code> a <code>111</code>) e devolve <code>0</code> ou <code>1</code>.
+            Sabemos que a função é <strong>Constante</strong> (retorna sempre o mesmo valor para todas as entradas) ou <strong>Balanceada</strong> (retorna <code>0</code> para metade das entradas e <code>1</code> para a outra metade).
+            <strong>Quantas vezes você precisa consultar o chip para ter 100% de certeza?</strong>
+          </p>
+        </div>
+      </div>
+
+      <div class="control-bar">
+        <div class="control-group">
+          <label for="dj-oracle-select">Escolha a Função Secreta do Oráculo f(x):</label>
+          <select id="dj-oracle-select">
+            <option value="const0">Constante: f(x) = 0 para todos</option>
+            <option value="const1">Constante: f(x) = 1 para todos</option>
+            <option value="bal_msb" selected>Balanceada: f(x) = x₀ (Bit mais significativo)</option>
+            <option value="bal_parity">Balanceada: f(x) = x₀ ⊕ x₁ ⊕ x₂ (Paridade XOR)</option>
+            <option value="bal_alt">Balanceada: f(x) = x₂ (Pares = 0, Ímpares = 1)</option>
+          </select>
+        </div>
+        <div class="control-actions">
+          <button class="btn btn-binary" id="btn-dj-classical-test">🔍 Testar Próxima Entrada Clássica</button>
+          <button class="btn btn-quantum" id="btn-dj-quantum-run">⚡ Executar Circuito Quântico (1 Única Consulta!)</button>
+          <button class="btn btn-outline" id="btn-dj-reset">Resetar Teste</button>
+        </div>
+      </div>
+
+      <div class="split-arena">
+        <div class="panel binary-panel">
+          <div class="panel-header">
+            <span class="badge badge-binary">MÉTODO BINÁRIO CLÁSSICO</span>
+            <h3>Precisa de até 2<sup>n-1</sup> + 1 = 5 Consultas</h3>
+          </div>
+
+          <p class="panel-desc">
+            Para ter 100% de certeza no pior caso (para N = 8 entradas), se as primeiras 4 respostas forem iguais, você ainda precisa da <strong>5ª consulta</strong> para descartar que a função seja balanceada!
+          </p>
+
+          <div class="truth-table-grid" id="dj-truth-table"></div>
+
+          <div class="insight-box binary-insight" id="dj-classical-verdict">
+            Consultas realizadas: <strong>0 / 5</strong>. Clique nas linhas acima ou em "Testar Próxima Entrada Clássica".
+          </div>
+        </div>
+
+        <div class="panel quantum-panel">
+          <div class="panel-header">
+            <span class="badge badge-quantum">CIRCUITO DE DEUTSCH-JOZSA</span>
+            <h3>100% de Certeza em Apenas 1 Consulta (Phase Kickback)</h3>
+          </div>
+
+          <div class="circuit-diagram">
+            <div class="circuit-step">
+              <div class="step-badge">Passo 1</div>
+              <strong>Superposição H<sup>⊗3</sup></strong>
+              <small>Cria os 8 estados com fase positiva</small>
+            </div>
+            <div class="circuit-arrow">→</div>
+            <div class="circuit-step highlight-step">
+              <div class="step-badge">Passo 2 (1 Consulta)</div>
+              <strong>Oráculo U<sub>f</sub>: (-1)<sup>f(x)</sup>|x⟩</strong>
+              <small>Inverte a fase onde f(x) = 1</small>
+            </div>
+            <div class="circuit-arrow">→</div>
+            <div class="circuit-step">
+              <div class="step-badge">Passo 3</div>
+              <strong>Interferência H<sup>⊗3</sup></strong>
+              <small>Soma construtiva ou destrutiva em |000⟩</small>
+            </div>
+          </div>
+
+          <div class="dj-amplitudes-view" id="dj-quantum-bars"></div>
+
+          <div class="insight-box quantum-insight" id="dj-quantum-verdict">
+            Clique em <strong>Executar Circuito Quântico</strong> para ver a interferência acontecer em 1 única chamada ao oráculo!
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         TAB 5: EMARANHAMENTO QUÂNTICO VS CORRELAÇÃO CLÁSSICA
+         ===================================================================== -->
+    <section id="tab-entanglement" class="tab-panel">
+      <div class="section-intro">
+        <div>
+          <h2>5. Emaranhamento Quântico (Estado de Bell) vs Bits Independentes</h2>
+          <p>
+            Na computação clássica, 2 bits têm sempre estados independentes (<code>00</code>, <code>01</code>, <code>10</code> ou <code>11</code>).
+            Na computação quântica, ao aplicar uma porta <strong>Hadamard (H)</strong> no Qubit A seguida de uma porta <strong>CNOT</strong> (Control-NOT) no Qubit B, criamos o famoso <strong>Estado de Bell |Φ⁺⟩ = (|00⟩ + |11⟩)/√2</strong>: dois qubits emaranhados cujos resultados de medição são 100% correlacionados instantaneamente!
+          </p>
+        </div>
+      </div>
+
+      <div class="split-arena">
+        <!-- CIRCUITO DE 2 BITS CLÁSSICOS -->
+        <div class="panel binary-panel">
+          <div class="panel-header">
+            <span class="badge badge-binary">2 BITS CLÁSSICOS</span>
+            <h3>Portas Lógicas Booleanas (XOR / CNOT Clássico)</h3>
+          </div>
+
+          <div class="two-wire-box">
+            <div class="wire-row">
+              <span class="wire-name">Bit A (Controle):</span>
+              <button class="btn btn-binary" id="btn-c2-toggle-a">Alternar Bit A (Atual: 0)</button>
+            </div>
+            <div class="wire-row">
+              <span class="wire-name">Bit B (Alvo):</span>
+              <button class="btn btn-binary" id="btn-c2-toggle-b">Alternar Bit B (Atual: 0)</button>
+            </div>
+            <div class="wire-row">
+              <span class="wire-name">Operação Entre Fios:</span>
+              <button class="btn btn-outline" id="btn-c2-xor">Aplicar B = A XOR B (CNOT Clássico)</button>
+            </div>
+          </div>
+
+          <div class="pair-probabilities" id="classical-pair-probs"></div>
+
+          <div class="insight-box binary-insight">
+            <strong>Limite Clássico:</strong> Não importa qual porta lógica (AND, OR, XOR, NAND) você use, o estado do par (A, B) é sempre <strong>um único par definido</strong>. Não existe estado em que A e B sejam 50%/50% indefinidos individualmente mas 100% acoplados quanticamente.
+          </div>
+        </div>
+
+        <!-- CIRCUITO DE 2 QUBITS & BELL STATE -->
+        <div class="panel quantum-panel">
+          <div class="panel-header">
+            <span class="badge badge-quantum">2 QUBITS &amp; EMARANHAMENTO</span>
+            <h3>Construtor de Estado de Bell |Φ⁺⟩</h3>
+          </div>
+
+          <div class="bell-presets">
+            <button class="btn btn-quantum" id="btn-bell-phi-plus">✨ Criar Par de Bell |Φ⁺⟩ = (|00⟩ + |11⟩)/√2</button>
+            <button class="btn btn-quantum" id="btn-bell-psi-plus">🔗 Criar Par Anti-Correlacionado |Ψ⁺⟩ = (|01⟩ + |10⟩)/√2</button>
+            <button class="btn btn-outline" id="btn-bell-reset">Resetar |00⟩</button>
+          </div>
+
+          <div class="gate-toolbar compact-toolbar">
+            <span>Portas Individuais / CNOT:</span>
+            <button class="btn btn-outline btn-sm" data-q2gate="HA">H no Qubit A</button>
+            <button class="btn btn-outline btn-sm" data-q2gate="XA">X no Qubit A</button>
+            <button class="btn btn-outline btn-sm" data-q2gate="XB">X no Qubit B</button>
+            <button class="btn btn-outline btn-sm" data-q2gate="ZA">Z no Qubit A</button>
+            <button class="btn btn-quantum btn-sm" data-q2gate="CNOT">Porta CNOT (A → B)</button>
+          </div>
+
+          <div class="ket-formula" id="bell-ket-formula">|ψ⟩ = 1.00|00⟩</div>
+
+          <div class="entanglement-meter">
+            <span>Grau de Emaranhamento (Concorrência Quântica):</span>
+            <strong id="entanglement-status" class="status-sep">0% (Estado Separável)</strong>
+          </div>
+
+          <div class="pair-probabilities" id="quantum-pair-probs"></div>
+
+          <div class="measurement-actions">
+            <button class="btn btn-measure" id="btn-measure-qubit-a">
+              👁️ Medir APENAS o Qubit A (Veja o Qubit B colapsar!)
+            </button>
+            <button class="btn btn-shots" id="btn-bell-100-shots">
+              🎲 Testar 200 Pares Emaranhados
+            </button>
+          </div>
+
+          <div class="measurement-result" id="bell-measure-log">
+            Clique em <strong>Criar Par de Bell |Φ⁺⟩</strong> e depois meça apenas o Qubit A para observar o colapso instantâneo do Qubit B!
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <p>QuantumLab — Simulador Educacional e Matemático de Computação Clássica Binária vs Computação Quântica</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
